@@ -1,8 +1,16 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-app = FastAPI()
+app = FastAPI(middleware=[
+            Middleware(
+            CORSMiddleware,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+            )]
+)
 
 
 @app.get("/")

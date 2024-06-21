@@ -1,6 +1,6 @@
-from typing import Optional
+# from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 
 app = FastAPI()
 
@@ -28,3 +28,4 @@ async def handle_event(request: Request):
         print(f"Error processing event: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+ 

@@ -1,6 +1,6 @@
-# from typing import Optional
-
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+import logging
 
 app = FastAPI()
 
@@ -20,12 +20,21 @@ async def handle_event(request: Request):
         events = await request.json()
         for event in events:
             # Process each event
-            print(f"Received event: {event}")
-            # Add your custom processing logic here
+              if event.get('eventType') == 'Microsoft.EventGrid.SubscriptionValidationEvent':
+                validation_code = event['data']['validationCode']
+                validation_response = {
+                    "validationResponse": validation_code
+                }
+                logging.info(f"Received subscription validation event. Validation code: {validation_code}")
+                print(f"Received event: {event}")
+                return JSONResponse(content=validation_response, status_code=200)
+                
 
-        return {"status": "success"}
+        return JSONResponse({"status": "success"}, status_code=200)
     except Exception as e:
         print(f"Error processing event: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
  
+
+        

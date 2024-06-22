@@ -14,6 +14,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def event_processing_middleware(request: Request, call_next):
+    if request.url.path == "/api/events" and request.method == "POST":
+        try:
+            logging.info(f"Received request: {request}")
+            events = await request.json()
+            logging.info(f"Received events: {events}")
+            for event in events:
+                if event.get('eventType') == 'Microsoft.EventGrid.SubscriptionValidationEvent':
+                    validation_code = event['data']['validationCode']
+                    validation_response = {
+                        "validationResponse": validation_code
+                    }
+                    logging.info(f"Received subscription validation event. Validation code: {validation_code}")
+                    logging.info(f"Received event: {event}")
+                    print(f"Received event: {event}")
+                    return JSONResponse(content=validation_response, status_code=200)
+        except Exception as e:
+            logging.error(f"Error processing event: {e}")
+            return JSONResponse(content={"error": "Invalid event data"}, status_code=400)
+    
+    response = await call_next(request)
+    return response
+
+
+@app.post("/api/events")
+async def handle_event(request: Request):
+    return JSONResponse(content={"message": "Event processed"}, status_code=200)
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -22,28 +52,3 @@ async def root():
 @app.get("/ok")
 async def ok_endpoint():
     return {"message": "ok"}
-
-@app.post("/api/events")
-async def handle_event(request: Request):
-    try:
-        logging.info(f"Received request: {request}")
-        events = await request.json()
-        logging.info(f"Received events: {events}")
-        for event in events:
-            # Process each event
-            if event.get('eventType') == 'Microsoft.EventGrid.SubscriptionValidationEvent':
-                validation_code = event['data']['validationCode']
-                validation_response = {
-                    "validationResponse": validation_code
-                }
-                logging.info(f"Received subscription validation event. Validation code: {validation_code}")
-                logging.info(f"Received event: {event}")
-                print(f"Received event: {event}")
-                return JSONResponse(content=validation_response, status_code=200)
-                
-
-        return JSONResponse({"status": "success"}, status_code=200)
-    except Exception as e:
-        print(f"Error processing event: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-

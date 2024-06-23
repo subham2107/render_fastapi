@@ -25,10 +25,10 @@ async def handle_event(request: Request):
         logging.info(f"Received events: {events}")
         for event in events:
             # Process each event
-                logging.info(f"Received event: {event}")
+                #logging.info(f"Received event: {event}")
                 print(f"Received event: {event}")
                 
-        return JSONResponse({"status": "success"}, status_code=200)
+        return JSONResponse({content = events}, status_code=200)
     except Exception as e:
         print(f"Error processing event: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -28,7 +28,7 @@ async def handle_event(request: Request):
                 logging.info(f"Received event: {event}")
                 print(f"Received event: {event}")
                 
-        return JSONResponse({"status": "success", f"Received event: {event}"}, status_code=200)
+        return JSONResponse({"status": "success", "Received event: {event}"}, status_code=200)
     except Exception as e:
 
 

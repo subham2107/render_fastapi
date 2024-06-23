@@ -20,9 +20,9 @@ app.add_middleware(
 @app.post("/api/events")
 async def handle_event(request: Request):
     try:
-        logging.info(f"Received request: {request}")
-        events = await request.json()
-        logging.info(f"Received events: {events}")
+        # logging.info(f"Received request: {request}")
+        event = await request.json()
+        logging.info(f"Received events: {event}")
         # for event in events:
             # Process each event
                 #logging.info(f"Received event: {event}")

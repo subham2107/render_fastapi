@@ -17,55 +17,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.middleware("http")
-async def event_processing_middleware(request: Request, call_next):
-    if request.url.path == "/api/events" and request.method == "POST":
-        try:
-            logger.info("Received request")
-            events = await request.json()
-            logger.info(f"Received events: {events}")
-
-            if not isinstance(events, list):
-                raise ValueError("Event data should be a list of events")
-
-            for event in events:
-                if 'eventType' not in event:
-                    raise ValueError("Event type missing in event data")
-                if event.get('eventType') == 'Microsoft.EventGrid.SubscriptionValidationEvent':
-                    validation_code = event['data'].get('validationCode')
-                    validation_url = event['data'].get('validationUrl')
-                    
-                    if not validation_code:
-                        raise ValueError("Validation code missing in event data")
-                    
-                    if validation_url:
-                        # Asynchronous (manual) validation
-                        async with httpx.AsyncClient() as client:
-                            validation_response = await client.get(validation_url)
-                            if validation_response.status_code != 200:
-                                raise HTTPException(status_code=500, detail="Manual validation failed")
-                        logger.info(f"Manual validation successful for URL: {validation_url}")
-                    
-                    # Synchronous validation response
-                    validation_response = {
-                        "validationResponse": validation_code
-                    }
-                    logger.info(f"Received subscription validation event. Validation code: {validation_code}")
-                    return JSONResponse(content=validation_response, status_code=200)
-        except Exception as e:
-            logger.error(f"Error processing event: {e}")
-            return JSONResponse(content={"error": "Invalid event data", "detail": str(e)}, status_code=400)
-    
-    response = await call_next(request)
-    return response
-
 @app.post("/api/events")
 async def handle_event(request: Request):
-    return JSONResponse(content={"message": "Event processed"}, status_code=200)
+    try:
+        logging.info(f"Received request: {request}")
+        events = await request.json()
+        logging.info(f"Received events: {events}")
+        for event in events:
+            # Process each event
+                logging.info(f"Received event: {event}")
+                print(f"Received event: {event}")
+                
+        return JSONResponse({"status": "success", f"Received event: {event}"}, status_code=200)
+    except Exception as e:
+
 
 @app.options("/api/events")
-async def options_event():
-    return JSONResponse(content={"message": "Options request processed"}, status_code=200)
+async def options_event(request: Request):
+    webhook_request_origin = request.headers.get("WebHook-Request-Origin")
+    webhook_request_rate = request.headers.get("WebHook-Request-Rate")
+
+    if not webhook_request_origin:
+        return PlainTextResponse(content="Missing WebHook-Request-Origin header", status_code=400)
+
+    response_headers = {
+        "Allow": "POST",
+        "WebHook-Allowed-Origin": webhook_request_origin,
+    }
+
+    if webhook_request_rate:
+        response_headers["WebHook-Allowed-Rate"] = webhook_request_rate
+    else:
+        response_headers["WebHook-Allowed-Rate"] = "*"
+
+    return PlainTextResponse(content="OK", status_code=200, headers=response_headers)
 
 @app.get("/")
 async def root():

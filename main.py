@@ -30,6 +30,8 @@ async def handle_event(request: Request):
                 
         return JSONResponse({"status": "success"}, status_code=200)
     except Exception as e:
+        print(f"Error processing event: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.options("/api/events")

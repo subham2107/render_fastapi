@@ -28,7 +28,7 @@ async def handle_event(request: Request):
                 #logging.info(f"Received event: {event}")
                 print(f"Received event: {event}")
                 
-        return JSONResponse(status_code=200)
+        return JSONResponse(content={"message": "Event processed"}, status_code=200)
     except Exception as e:
         print(f"Error processing event: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
